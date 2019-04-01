@@ -1,0 +1,53 @@
+<div class="box-body">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="box-body table-responsive no-padding">
+                <table class="table table-bordered table-hover" role="grid">
+                    <tbody>
+                    <tr>
+                        <td class="text-center" style="width:200px"> 命令</td>
+                        <td class="text-center">{{ res.command }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" style="width:200px"> 执行主机</td>
+                        <td class="text-center">{{ res.hosts_list }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" style="width:200px"> 执行结果</td>
+                        <td class="text-center">
+                            <table class="table table-bordered table-hover" role="grid">
+                                <tbody>
+                                <tr>
+                                    <td class="text-center" style="width:200px">ok</td>
+                                    <td class="text-center">
+                                    {{ res.result.0 }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="width:200px">failed</td>
+                                    <td class="text-center">
+                                        {% for k in res.ok %}
+                                            {{ k.command.stdout }}
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="width:200px">unreachable</td>
+                                    <td class="text-center">{{ res.command }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="width:200px">skipped</td>
+                                    <td class="text-center">{{ res.command }}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</div>

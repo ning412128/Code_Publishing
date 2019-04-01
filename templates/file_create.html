@@ -1,0 +1,58 @@
+<form class="form-horizontal" enctype="multipart/form-data" id="createForm"  action="" method="post">{% csrf_token %}
+  <div class="box-body">
+  {% for field in form %}
+    <div class="form-group{% if field.errors %} has-error{% endif %}">
+        <label class="col-sm-2 control-label">{{ field.label }}
+          {% if field.rfield.equired %}
+            <span class="text-red">*</span>
+          {% endif %}
+        </label>
+        <div class="col-sm-8">
+            {{ field }}
+        </div>
+        <span class="help-block">
+          {% for error in field.errors %}
+              {{ error }}
+          {% endfor %}
+          {{ field.help_text }}
+        </span>
+    </div>
+    {% endfor %}
+    <div class="box-footer text-center col-sm-8">
+        <button id="createBtn" type="button" class="btn btn-info" onclick="upload()">提交</button>
+        <p class="text-center"><i id='iconWait'></i></p>
+    </div>
+  </div>
+</form>
+
+<script>
+    $(function () {
+        $("select").select2()
+    });
+//不能使用jquery来获取表单数据
+//必须使用原生的js
+function upload(){
+    var form=new FormData(document.getElementById("createForm"));
+     $.ajax({
+            //几个参数需要注意一下
+            type: "POST",//方法类型
+            dataType: "json",//预期服务器返回的数据类型
+            contentType: false, // 不设置内容类型,使用from指定的enctype="multipart/form-data"
+            processData: false, // 不处理数据，数据保持本身的样子
+            url: "{% url 'fileupdate' %}",//url
+            data: form,
+            success: function (result, status, xhr) {
+                if (result.status === 1) {
+                    alert(result.msg);
+                } else {
+                    console.log(result);
+                    alert('上传成功');
+                    location.reload();
+                }
+            },
+            error: function (result) {
+               alert(result.msg);
+            }
+        });
+}
+</script>

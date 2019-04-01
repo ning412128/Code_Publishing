@@ -1,0 +1,94 @@
+{% extends 'master/base.html' %}
+{% block content %}
+    <div class="col-xs-12">
+        <div class="box">
+            <div class="box-header">
+                <div data-url="{% url 'createuser' %}" class="btn btn-sm btn-success add-btn">新增用户</div>
+                <form class="box-tools">
+                    <div class="input-group input-group-sm" style="width: 150px;">
+                        <input type="text" name="table_search" class="form-control pull-right" placeholder="Search">
+
+                        <div class="input-group-btn">
+                            <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+
+
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body table-responsive no-padding">
+                <table class="table table-hover text-center">
+                    <tr>
+                        <th>用户名</th>
+                        <th>邮箱</th>
+                        <th>roles</th>
+                        <th>admin</th>
+                        <th>操作</th>
+                    </tr>
+                    {% for u in users %}
+                        <tr>
+                            <td>{{ u.name }}</td>
+                            <td>{{ u.email }}</td>
+                            <td>{{ u.get_role_display }}</td>
+                            <td>{{ u.get_isAdmin_display }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a type="button" href="#" data-url="{% url 'edituser' u.pk %}"
+                                       class="edit-btn btn btn-primary btn-xs">编辑</a>
+                                    {#                    <a type="button" href="#" data-url="{% url 'teamdetail' project.pk %}" class="detail-btn btn btn-success btn-xs">详情</a>#}
+                                    <a type="button" href="#" data-url="{% url 'deluser' u.pk %}"
+                                       class="btn del-btn btn-danger btn-xs">删除</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+    </div>
+{% endblock %}
+
+{% block footer_script %}
+    <script>
+        $(function () {
+            $("select").select2();
+            $("#users").addClass('active');
+            $(".add-btn").on('click', function (e) {
+                e.preventDefault();
+                var url = $(this).attr('data-url');
+                ui.box({
+                    title: '添加项目',
+                    size: 'lg',
+                    footer: false,
+                    remote: url
+                });
+            })
+            $(".edit-btn").on('click', function (e) {
+                e.preventDefault();
+                var url = $(this).attr('data-url');
+                ui.box({
+                    title: '添加项目',
+                    size: 'lg',
+                    footer: false,
+                    remote: url
+                });
+            })
+
+             $(".del-btn").on('click', function (e) {
+                 e.preventDefault();
+                 var url = $(this).attr('data-url');
+                ui.confirm('你是否要删除这条数据',function () { //用来做确认删除的
+                    $.get({
+                        url:url,
+                        success:function () {
+                            window.location.href="{% url 'userall' %}" //重新请求
+                        }
+                    })
+                })
+            })
+
+        })
+    </script>
+{% endblock %}

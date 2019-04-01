@@ -1,0 +1,204 @@
+{% extends 'master/base.html' %}
+{% load static %}
+{% block css %}
+    {#    <link rel="stylesheet" href={% static "plugins/zTree_v3/css/demo.css" %} type="text/css">#}
+    <link rel="stylesheet" href={% static "plugins/zTree_v3/css/zTreeStyle/zTreeStyle.css" %} type="text/css">
+{% endblock %}
+{% block content %}
+    <form class="form-horizontal" id="createForm" action="" method="post">{% csrf_token %}
+        <div class="box-body">
+            <div class="col-md-6">
+                <div class="box-body chat" style="height: 300px;overflow: scroll;width: auto">
+                    <ul id="treeDemo" class="ztree"></ul>
+                    {#              overflow: scroll 设置指定的区域，如果超过了这个区域就显示轮动条      #}
+                </div>
+                <textarea style="width: 100%;height: 100px" id="com" name="com"></textarea>
+            </div>
+            <div class="col-md-6">
+                <div class="bg-black-active color-palette" style="height: 400px;overflow: scroll;">
+                    <span>当前选中了</span><span id="count"></span>台机器<br>
+                    <span>结果展示:</span><br><pre id="res"></pre>
+                </div>
+
+            </div>
+            <div class="text-center col-sm-8">
+                <button id="createBtn" type="button" class="btn btn-info">提交</button>
+                <p class="text-center"><i id='iconWait'></i></p>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+{% block footer_script %}
+    <script type="text/javascript" src={% static "plugins/zTree_v3/js/jquery.ztree.core.js" %}></script>
+    <script type="text/javascript" src={% static "plugins/zTree_v3/js/jquery.ztree.excheck.js" %}></script>
+    <script>
+        $(function () {
+            var setting = {
+                view: {
+                    selectedMulti: false
+                },
+                check: {
+                    enable: true
+                },
+                data: {
+                    simpleData: {
+                        enable: true
+                    }
+                },
+                callback: {
+                    onCheck: onCheck
+                }
+            };
+
+            var clearFlag = false;
+
+            function onCheck(e, treeId, treeNode) {
+                count();
+                if (clearFlag) {
+                    clearCheckedOldNodes();
+                }
+            }
+
+            function clearCheckedOldNodes() {
+                var zTree = $.fn.zTree.getZTreeObj("treeDemo"),
+                    nodes = zTree.getChangeCheckedNodes();
+                for (var i = 0, l = nodes.length; i < l; i++) {
+                    nodes[i].checkedOld = nodes[i].checked;
+                }
+            }
+
+            function count() {
+                var zTree = $.fn.zTree.getZTreeObj("treeDemo"),
+                    checkCount = zTree.getCheckedNodes(true).length - 1;
+                if (checkCount < 1) {
+                    checkCount = 0
+                }
+                $("#count").text(checkCount);
+            }
+
+            function createTree() {
+                $.fn.zTree.init($("#treeDemo"), setting, {{ hosts|safe }});
+                count();
+                clearFlag = $("#last").attr("checked");
+            }
+
+            $(document).ready(function () {
+                createTree();
+                $("#init").bind("change", createTree);
+                $("#last").bind("change", createTree);
+            });
+            $("select").select2();
+             $("#res").hide();
+            $('#createBtn').on('click', function (e) {
+                var zTree = $.fn.zTree.getZTreeObj("treeDemo"),
+                    nodes = zTree.getCheckedNodes(true);
+
+                if (nodes.length == 0) {
+                    alert('请选中机器')
+                    return
+                }
+                if ($("#com").val() == "") {
+                    alert("请输入命令");
+                    return
+                }
+                var node_ips = [];
+                nodes.forEach(function (node) {
+                    if (node.id != 1) {
+                        node_ips.push(node.name)
+                    }
+                });
+
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                var csrftoken = getCookie('csrftoken');
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                $.ajaxSetup({
+                    beforeSend: function (xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    }
+                });
+                mes="<font color='#ffffff'>---任务开始执行---</font>";
+                $("#res").show()
+                $("#res").html(mes);
+                $("#createBtn").addClass("disabled");
+                $("#c").text($("#com").val());
+                console.log($("#createForm").serialize())
+                $.post({
+                    url:{% url 'createcommand' %},
+                    data:{
+                        node_ips:node_ips,
+                        command:$("#com").val()
+                        },
+                    success:function (res) {
+                        if(res.status==0){
+                            var data=res.data;
+                            var data_ok=data.ok;
+                            var data_failed=data.failed;
+                            var data_unreachable=data.unreachable;
+                            var data_skipped=data.skipped;
+                            console.log(Object.keys(data_ok).length);
+                            var msg_ok="";
+                            if (Object.keys(data_ok).length>0){
+                                $.each(data_ok,function (d,n) {
+                                    console.log(n);
+                                    msg_ok=msg_ok+"<font color='green'>"+d+"| CHANGED | rc=0 >>\n";
+                                    msg_ok=msg_ok+n.command.stdout+"</font>\n";
+                                })
+
+                            }
+                            if (Object.keys(data_failed).length>0){
+                                $.each(data_failed,function (d,n) {
+                                    msg_ok=msg_ok+"<font color='red'>"+d+"| FAILED | rc=2 >>\n";
+                                    msg_ok=msg_ok+n.command.stdout+"\n";
+                                    msg_ok=msg_ok+n.command.stderr+"</font>\n";
+                                })
+
+                            }
+                            if (Object.keys(data_unreachable).length>0){
+                                $.each(data_unreachable,function (d,n) {
+                                    console.log(n);
+                                    msg_ok=msg_ok+"<font color='red'>"+d+"| UNREACHABLE! >>\n";
+                                    msg_ok=msg_ok+n.command.msg+"</font>\n";
+                                })
+
+                            }
+                            if (Object.keys(data_skipped).length>0){
+                                $.each(data_skipped,function (d,n) {
+                                    console.log(n);
+                                    msg_ok=msg_ok+"<font color='cyan'>"+d+"| SUCCESS | rc=0 >>\n";
+                                    msg_ok=msg_ok+n.command.stdout+"</font>\n";
+                                })
+
+                            }
+                            $("#res").html(msg_ok);
+                            $("#createBtn").removeClass("disabled");
+                        }
+                    }
+                })
+            });
+
+
+        });
+    </script>
+{% endblock %}

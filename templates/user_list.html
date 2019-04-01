@@ -1,0 +1,134 @@
+{% extends "master/base.html" %}
+
+{% block content %}
+    <div class="box">
+        <div class="box-header">
+            <a href="#" data-url="{% url 'usercreate' %}" class="add-btn btn bg-purple btn-sm">添加用户</a>
+            <form method="get" class="box-tools">{% csrf_token %}
+                <div class="input-group input-group-sm" style="width: 150px;">
+                    <input type="text" name="name" class="form-control pull-right"
+                           placeholder="Search">
+                    <div class="input-group-btn">
+                        <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body">
+            <div class="row">
+                <div class="col-sm-12">
+                    <table id="" class="table table-bordered table-hover" role="grid">
+                        <thead>
+                        <tr role="row">
+                            <th class="text-center">用户名</th>
+                            <th class="text-center">邮箱</th>
+                            <th class="text-center">角色</th>
+                            <th class="text-center">是否是管理员</th>
+                            <th class="text-center">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for u in users %}
+                            <tr role="row" class="odd">
+                                <td class="text-center"><a href="#">{{ u.name }}</a></td>
+                                <td class="text-center"> {{ u.email }}</td>
+                                <td class="text-center"> {{ u.get_role_display }}</td>
+                                <td class="text-center"> {{ u.get_isAdmin_display }}</td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <a type="button" href="#" data-url="{% url 'useredit' u.pk %}"
+                                           class="edit-btn btn btn-primary btn-xs">编辑</a>
+                                        {#                    <a type="button" href="#" data-url="{% url 'teamdetail' project.pk %}" class="detail-btn btn btn-success btn-xs">详情</a>#}
+                                        <a type="button" href="#" data-url="{% url 'userdelete' u.pk %}"
+                                           class="btn del-btn btn-danger btn-xs">删除</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        </tfoot>
+                    </table>
+                    <div class="pull-right">
+                        <ul class="pagination">
+                            {{ page_html|safe }}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /.box-body -->
+    </div>
+{% endblock %}
+
+{% block footer_script %}
+    <script>
+            function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        var csrftoken = getCookie('csrftoken');
+
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+        $(function () {
+            $("select").select2();
+            $("#users").addClass('active');
+            $(".add-btn").on('click', function (e) {
+                e.preventDefault();
+                var url = $(this).attr('data-url');
+                ui.box({
+                    title: '添加项目',
+                    size: 'lg',
+                    footer: false,
+                    remote: url
+                });
+            });
+
+            $(".edit-btn").on('click', function (e) {
+                e.preventDefault();
+                var url = $(this).attr('data-url');
+                ui.box({
+                    title: '添加项目',
+                    size: 'lg',
+                    footer: false,
+                    remote: url
+                });
+            });
+            $(".del-btn").on('click', function (e) {
+                 var url = $(this).attr('data-url');
+                ui.confirm("确定删除这条记录吗？",function () {
+                    $.get({
+                        url:url,
+                        success:function (data) {
+                            window.location.href={% url 'userall' %}
+                        }
+                    })
+                })
+            });
+        })
+    </script>
+{% endblock %}

@@ -1,0 +1,56 @@
+<div class="box-body">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="box-body table-responsive no-padding">
+                <table class="table table-bordered table-hover" role="grid">
+                    <tbody>
+                    <tr>
+                        <td class="text-center" style="width:200px"> 项目名称</td>
+                        <td class="text-center">{{ res.team.name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" style="width:200px"> 更新类型</td>
+                        <td class="text-center">{{ res.get_type_display }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" style="width:200px"> 更新人员</td>
+                        <td class="text-center">{{ res.user.name }}
+                        </td>
+                    </tr>
+                     <tr>
+                        <td class="text-center" style="width:200px"> 测试人员</td>
+                        <td class="text-center">
+                            {% for u in res.team.test_user.all %}
+                                {{ u.name }}&nbsp;
+                                {% endfor %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" style="width:200px"> 主机状态</td>
+                        <td class="text-center">
+                            <table class="table table-bordered table-hover" role="grid">
+                                <tbody>
+                                <tr>
+                                    <td class="text-center" style="width:200px"> 主机名称</td>
+                                    <td class="text-center" style="width:200px"> 主机IP</td>
+                                    <td class="text-center" style="width:200px"> 主机状态</td>
+                                </tr>
+                                {% for h in res.host_issue_set.all %}
+                                <tr>
+                                    <td class="text-center" style="width:200px"> {{ h.host.name }}</td>
+                                    <td class="text-center" style="width:200px"> {{ h.host.hostip }}</td>
+                                    <td class="text-center" style="width:200px"> {{ h.get_status_display }}</td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
